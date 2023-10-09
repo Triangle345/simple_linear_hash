@@ -27,8 +27,28 @@ int main(void) {
 }
 
 ```
-compile this with like so:
+compile this like so:
 
 ```
 clang example.c slh.c -o example
+```
+
+I have also included extensive unit testing which stresses the slh's functionality. I have built this using Scons. To run, download scons via pip and simply
+
+```
+slh> scons
+scons: Reading SConscript files ...
+scons: done reading SConscript files.
+scons: Building targets ...
+gcc -o slh.o -c -g slh.c
+gcc -o test.o -c -g test.c
+gcc -o hash_test.exe slh.o test.o
+hash_test.exe
+Test stress test...                             [ OK ]
+Test overwrite...                               [ OK ]
+Test remove test...                             [ OK ]
+Test test collision mid...                      [ OK ]
+Test test collision edge...                     [ OK ]
+SUCCESS: All unit tests have passed.
+scons: done building targets.
 ```
