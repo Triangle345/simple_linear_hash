@@ -90,7 +90,7 @@ void test_remove(void) {
     TEST_CHECK(slh_len(ht) == 1);
 
     int * ret = slh_remove(ht, djb2("testing"));
-    TEST_CHECK_(*ret == 5, "ret==%ld\n",*ret);
+    TEST_CHECK_(*ret == 5, "ret==%d\n",*ret);
     TEST_CHECK(slh_len(ht) == 0);
     slh_free(ht);
 

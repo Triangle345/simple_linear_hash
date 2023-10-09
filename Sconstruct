@@ -1,13 +1,16 @@
 import glob
-env = Environment(tools=['mingw'],
-                  CCFLAGS=["-g"])
+import os
+
+os.environ['SCONS_CACHE_MSVC_CONFIG'] = "1"
+env = Environment()
+# import pdb;pdb.set_trace()
 
 hash_test = env.Program(target='hash_test', source=[] + glob.glob("*.c"), LIBS=[], LIBPATH=[])
 
-# import pdb;pdb.set_trace()
+
 
 test = env.Command( target = "testoutput",
                 source = str(hash_test[0]),
-                action = str(hash_test[0]) )
+                action = "."+os.sep+"$SOURCE" )
 env.Depends( test, hash_test )
 env.AlwaysBuild( test )
