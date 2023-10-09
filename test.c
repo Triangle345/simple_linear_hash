@@ -1,4 +1,4 @@
-#include "simple_hash.h"
+#include "slh.h"
 #include "acutest/include/acutest.h"
 
 
