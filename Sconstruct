@@ -1,0 +1,13 @@
+import glob
+env = Environment(tools=['mingw'],
+                  CCFLAGS=["-g"])
+
+hash_test = env.Program(target='hash_test', source=[] + glob.glob("*.c"), LIBS=[], LIBPATH=[])
+
+# import pdb;pdb.set_trace()
+
+test = env.Command( target = "testoutput",
+                source = str(hash_test[0]),
+                action = str(hash_test[0]) )
+env.Depends( test, hash_test )
+env.AlwaysBuild( test )
