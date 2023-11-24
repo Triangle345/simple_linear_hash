@@ -117,17 +117,17 @@ void test_custom_type(void) {
     slh_insert(ht, djb2("testing"), &testitem);
     TEST_CHECK(slh_len(ht) == 1);
 
-    teststruct item = *((teststruct*)slh_get(ht, djb2("testing")));
-    TEST_CHECK_(item.a == 10, "ret==%d\n",item.a);
-    TEST_CHECK_(item.b == 20, "ret==%ld\n",item.b);
-    TEST_CHECK_(strcmp(item.c, "testing") == 0, "ret==%s\n",item.c);
+    teststruct *item = (teststruct*)slh_get(ht, djb2("testing"));
+    TEST_CHECK_(item->a == 10, "ret==%d\n",item->a);
+    TEST_CHECK_(item->b == 20, "ret==%ld\n",item->b);
+    TEST_CHECK_(strcmp(item->c, "testing") == 0, "ret==%s\n",item->c);
 
     bool rem = slh_remove(ht, djb2("testing"));
     TEST_CHECK(rem == true);
     TEST_CHECK(slh_len(ht) == 0);
     rem = slh_remove(ht, djb2("testing"));
     TEST_CHECK(rem == false);
-    teststruct *pitem = (teststruct*)slh_get(ht, djb2("testing"));
+    teststruct *pitem = slh_get(ht, djb2("testing"));
     TEST_CHECK(pitem == NULL);
     slh_free(ht);
 
