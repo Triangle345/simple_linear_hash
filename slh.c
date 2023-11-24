@@ -1,8 +1,10 @@
 #include "slh.h"
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <string.h>
+#include <vcruntime.h>
 // #include "acutest/include/acutest.h"
 
 #define EMPTY NULL
@@ -23,6 +25,7 @@ typedef struct _bucket  {
 typedef struct _ctx {
     size_t num_items;
     size_t size;
+    size_t struct_size;
     Bucket * ht;
 } Ctx;
 
@@ -36,10 +39,11 @@ size_t djb2(unsigned char* str) {
     return hash;
 }
 
-slh_ctx slh_new() {
+slh_ctx slh_new(size_t size) {
     Ctx* ctx = (Ctx*)calloc(1,sizeof(Ctx));
     ctx->ht = (Bucket*)calloc(SLH_INIT_SIZE, sizeof(Bucket));
     ctx->size = SLH_INIT_SIZE;
+    ctx->struct_size = size;
 
     return ctx;
 }
@@ -118,7 +122,14 @@ void* slh_insert(slh_ctx my_ht, size_t key, void* val) {
         savedDat = ht[idx].data;
     }
 
-    ht[idx].data = val;
+    if (ht[idx].data != NULL) {
+        ht[idx].data = realloc(ht[idx].data, my_ctx->struct_size);
+    } else {
+        ht[idx].data = calloc(1, my_ctx->struct_size);
+    }
+
+    memcpy_s(ht[idx].data, my_ctx->struct_size, val,my_ctx->struct_size);
+    // ht[idx].data = val;
     ht[idx].key = key;
 
     return savedDat;
@@ -148,13 +159,13 @@ void* slh_get(slh_ctx my_ht, size_t key) {
     return _ht->ht[idx].data;
 }
 
-void* slh_remove(slh_ctx my_ht, size_t key) {
+bool slh_remove(slh_ctx my_ht, size_t key) {
     Ctx* my_ctx = my_ht;
     Bucket* ht = my_ctx->ht;
 
     size_t idx = find_target_bucket_idx(my_ht, key);
     
-    void* ret = NULL;
+    bool ret = false;
 
     // if we cant find the target bucket, return NULL
     if (idx == SIZE_MAX || is_bucket_free(ht[idx])) {
@@ -165,8 +176,10 @@ void* slh_remove(slh_ctx my_ht, size_t key) {
     // in fixing the fragmenting buckets later on
     size_t orig_idx = calc_idx(my_ht, key);
 
-    ret = ht[idx].data;
-    ht[idx].data = (void*)TOMBSTONE;
+    // ret = ht[idx].data;
+    ret = true;
+    free(ht[idx].data);
+    ht[idx].data = NULL;
     ht[idx].key = 0;
     
     //while not == empty move buckets to left to fill in empty
@@ -188,7 +201,7 @@ void* slh_remove(slh_ctx my_ht, size_t key) {
         if (calc_idx(my_ctx ,ht[i].key) == orig_idx) {
             ht[i_prev].data = ht[i].data;
             ht[i_prev].key = ht[i].key;
-            ht[i].data = (void*)TOMBSTONE;
+            ht[i].data = NULL;//(void*)TOMBSTONE;
             ht[i].key = 0;
         }
     }
@@ -199,11 +212,22 @@ void* slh_remove(slh_ctx my_ht, size_t key) {
 
 void slh_free(slh_ctx my_ht) {
     Ctx* my_ctx = my_ht;
-    if (my_ctx) {
-        if (my_ctx->ht) {
-            free(my_ctx->ht);
-        }
-
-        free(my_ht);
+    if (!my_ctx) {
+        return;
     }
+
+    if (! my_ctx->ht) {
+        return;
+    }
+
+    // lets fee all the data fields
+    for (int i = 0; i < my_ctx->size; i++) {
+        if (my_ctx->ht[i].data) {
+            free(my_ctx->ht[i].data);
+        } 
+    }
+    
+    free(my_ctx->ht);
+    free(my_ht);
+    
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 // initial hash array size.
 #define SLH_INIT_SIZE 512
@@ -18,10 +19,10 @@ size_t djb2(unsigned char* str);
 
 /**
  * @brief creates a new simple linear hash table.
- * 
+ * @param size size of the stored data structure
  * @return slh_ctx returns a new hash context that is used throughout the API.
  */
-slh_ctx slh_new();
+slh_ctx slh_new(size_t size);
 
 /**
  * @brief destroys and deallocates a given simple linear hash table.
@@ -62,9 +63,9 @@ size_t slh_len(slh_ctx my_ht);
  * 
  * @param my_ht 
  * @param key 
- * @return void* the removed entry.
+ * @return bool if removed successfully.
  */
-void* slh_remove(slh_ctx my_ht, size_t key);
+bool slh_remove(slh_ctx my_ht, size_t key);
 
 // TODO:
 // double get_full_ratio(sh_ctx ht);

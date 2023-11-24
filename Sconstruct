@@ -3,6 +3,7 @@ import os
 
 os.environ['SCONS_CACHE_MSVC_CONFIG'] = "1"
 env = Environment()
+env.AppendENVPath('PATH', '.')
 # import pdb;pdb.set_trace()
 
 hash_test = env.Program(target='hash_test', source=[] + glob.glob("*.c"), LIBS=[], LIBPATH=[])
@@ -11,6 +12,7 @@ hash_test = env.Program(target='hash_test', source=[] + glob.glob("*.c"), LIBS=[
 
 test = env.Command( target = "testoutput",
                 source = str(hash_test[0]),
-                action = "."+os.sep+"$SOURCE" )
+                # action = "."+os.sep+"$SOURCE" )
+                action = str(hash_test[0]) )
 env.Depends( test, hash_test )
 env.AlwaysBuild( test )

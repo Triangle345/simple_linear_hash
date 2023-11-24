@@ -1,11 +1,13 @@
 #include "slh.h"
 #include "acutest/include/acutest.h"
+#include <stddef.h>
+#include <string.h>
 
 
 
 void stress_test_hash(void)
 {
-    slh_ctx ht = slh_new();
+    slh_ctx ht = slh_new(sizeof(int));
     int i1 = 5;
     slh_insert(ht, djb2("testing"), &i1);
     TEST_CHECK(slh_len(ht) == 1);
@@ -24,7 +26,7 @@ void stress_test_hash(void)
 }
 void test_collision (void) {
     //'testing6', 'testing150', 'testing231'
-    slh_ctx ht = slh_new();
+    slh_ctx ht = slh_new(sizeof(int));
     int i1 = 6;
     int i2 = 150;
     int i3 = 231;
@@ -38,9 +40,13 @@ void test_collision (void) {
     TEST_CHECK(*ret == 150);
     ret = slh_get(ht, djb2("testing150"));
     TEST_CHECK(*ret == 150);
-    ret = slh_remove(ht, djb2("testing150"));
+    bool ret_bool = slh_remove(ht, djb2("testing150"));
     TEST_CHECK(slh_len(ht) == 2);
-    TEST_CHECK(*ret == 150);
+    TEST_CHECK(ret_bool == true);
+
+    ret_bool = slh_remove(ht, djb2("lsjf"));
+    TEST_CHECK(slh_len(ht) == 2);
+    TEST_CHECK(ret_bool == false);
 
     ret = slh_get(ht, djb2("testing150"));
     TEST_CHECK(ret == NULL);
@@ -54,7 +60,7 @@ void test_collision (void) {
 
 void test_collision_edge (void) {
     //Collision: ['testing147', 'testing228', 'testing309']:idx 511
-    slh_ctx ht = slh_new();
+    slh_ctx ht = slh_new(sizeof(int));
     int i1 = 147;
     int i2 = 228;
     int i3 = 309;
@@ -68,9 +74,9 @@ void test_collision_edge (void) {
     TEST_CHECK(*ret == 228);
     ret = slh_get(ht, djb2("testing228"));
     TEST_CHECK(*ret == 228);
-    ret = slh_remove(ht, djb2("testing228"));
+    bool ret_bool = slh_remove(ht, djb2("testing228"));
     TEST_CHECK(slh_len(ht) == 2);
-    TEST_CHECK(*ret == 228);
+    TEST_CHECK(ret_bool == true);
 
     ret = slh_get(ht, djb2("testing228"));
     TEST_CHECK(ret == NULL);
@@ -83,22 +89,53 @@ void test_collision_edge (void) {
 }
 
 void test_remove(void) {
-    slh_ctx ht = slh_new();
+    slh_ctx ht = slh_new(sizeof(int));
     // Ctx* _ht = ht;
     int i1 = 5;
     slh_insert(ht, djb2("testing"), &i1);
     TEST_CHECK(slh_len(ht) == 1);
 
-    int * ret = slh_remove(ht, djb2("testing"));
-    TEST_CHECK_(*ret == 5, "ret==%d\n",*ret);
+    bool ret_bool = slh_remove(ht, djb2("testing"));
+    TEST_CHECK_(ret_bool == true, "ret==%d\n",ret_bool);
     TEST_CHECK(slh_len(ht) == 0);
+    slh_free(ht);
+
+}
+
+typedef struct _teststruct
+{
+    int a;
+    size_t b;
+    char c[12];
+} teststruct;
+
+void test_custom_type(void) {
+    slh_ctx ht = slh_new(sizeof(teststruct));
+    // Ctx* _ht = ht;
+    teststruct testitem = {10,20,0};
+    strcat_s(testitem.c, 12, "testing");
+    slh_insert(ht, djb2("testing"), &testitem);
+    TEST_CHECK(slh_len(ht) == 1);
+
+    teststruct item = *((teststruct*)slh_get(ht, djb2("testing")));
+    TEST_CHECK_(item.a == 10, "ret==%d\n",item.a);
+    TEST_CHECK_(item.b == 20, "ret==%ld\n",item.b);
+    TEST_CHECK_(strcmp(item.c, "testing") == 0, "ret==%s\n",item.c);
+
+    bool rem = slh_remove(ht, djb2("testing"));
+    TEST_CHECK(rem == true);
+    TEST_CHECK(slh_len(ht) == 0);
+    rem = slh_remove(ht, djb2("testing"));
+    TEST_CHECK(rem == false);
+    teststruct *pitem = (teststruct*)slh_get(ht, djb2("testing"));
+    TEST_CHECK(pitem == NULL);
     slh_free(ht);
 
 }
 
 void test_overwrite(void)
 {
-    slh_ctx ht = slh_new();
+    slh_ctx ht = slh_new(sizeof(int));
     // Ctx* _ht = ht;
     int i1 = 5;
     int i2 = 7;
@@ -113,7 +150,7 @@ void test_overwrite(void)
 
     ret = slh_insert(ht, djb2("testing"), &i2);
     // dat = _ht->ht[idx].data;
-    TEST_CHECK(*ret == 5);
+    TEST_CHECK_(*ret == 7, "val == %d\n", *ret);
 
     free(ht);
 
@@ -125,5 +162,6 @@ TEST_LIST = {
 {"remove test", test_remove},
 {"test collision mid", test_collision},
 {"test collision edge", test_collision_edge},
+{"test custom type", test_custom_type},
 { NULL, NULL }
 };
