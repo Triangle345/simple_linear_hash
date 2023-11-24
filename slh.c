@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <vcruntime.h>
 // #include "acutest/include/acutest.h"
 
 #define EMPTY NULL
@@ -226,7 +225,7 @@ void slh_free(slh_ctx my_ht) {
             free(my_ctx->ht[i].data);
         } 
     }
-    
+
     free(my_ctx->ht);
     free(my_ht);
     
